@@ -34,6 +34,7 @@ digital_out Expansion = digital_out(Brain.ThreeWirePort.C);
 //Sensors
 optical OpticalTop = optical(PORT4);
 optical OpticalBottom = optical(PORT1);
+optical OpticalBottom1 = optical(PORT6);
 
 // // AI 
 // gps GPSLeft = gps(PORT9, 0, -165, distanceUnits::mm, 180);
@@ -43,7 +44,8 @@ inertial InertialSensor = inertial(PORT17);
 
 
 
-
+directionType thirdStageDefaultDir = forward;
+bool thirdStageOverrideActive = false;
 
 //Add your devices below, and don't forget to do the same in robot-config.h:
 

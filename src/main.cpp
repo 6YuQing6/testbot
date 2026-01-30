@@ -126,18 +126,55 @@ PORT3,     -PORT4,
 }
 
 
+
 void auto_Isolation(void) {
+  chassis.set_drive_exit_conditions(1.5, 300, 2000);
+
+  // start with bot backwards, top left park zone black aligns with bottom right of bot
+  OpticalBottom.objectDetected(onBottomDetected);
   chassis.set_heading(0);
-  chassis.drive_distance(-34.5);
+  chassis.drive_distance(-37);
   chassis.turn_to_angle(45);
-  chassis.drive_distance(-5);
-  ThirdStage.spin(reverse, 50, percent);
-  SecondStage.spin(forward, 50, percent);
-  wait(1000, msec);
-  chassis.drive_distance(6);
-  wait(500, msec);
-  chassis.turn_to_angle(-45);
+  // chassis.drive_distance(-5);
+  // ThirdStage.spin(reverse, 50, percent);
+  // SecondStage.spin(forward, 50, percent);
+  // wait(1000, msec);
+  // chassis.drive_distance(6);
+  // wait(500, msec);
+  // chassis.turn_to_angle(-45);
   // chassis.drive_distance(10);
+
+  // knocks tower of balls down and grabs at least one ball
+  chassis.set_drive_constants(3, 1.5, 0, 10, 0);
+  chassis.drive_distance(10);
+  // matchloader down to anchor ball
+  // Matchloader.set(true);
+  FirstStage.spin(forward, 100, percent);
+  // SecondStage.spin(forward, 100, percent);
+  wait(500, msec);
+  chassis.set_drive_constants(6, 1.5, 0, 10, 0);
+  // drives back to middle goal scores two balls
+  chassis.drive_distance(-13);
+  SecondStage.spin(forward, 100, percent);
+  ThirdStage.spin(reverse,100,percent);
+  wait(1000, msec);
+  // FirstStage.stop();
+  SecondStage.stop();
+  ThirdStage.stop();
+  // drives to long goal
+  chassis.drive_distance(52);
+  Matchloader.set(true);
+  chassis.turn_to_angle(0);
+  chassis.set_drive_constants(10, 1.5, 0, 10, 0);
+
+  chassis.drive_distance(10);
+  chassis.drive_distance(-28);
+  // loads long goal
+  OpticalTop.objectDetected(onTopDetected);
+  FirstStage.spin(forward, 100, percent);
+  SecondStage.spin(forward, 100, percent);
+  ThirdStage.spin(forward, 100, percent);
+  
 }
 
 
@@ -170,7 +207,7 @@ void auto_Interaction(void) {
   FirstStage.spin(fwd,0,voltageUnits::mV);
   SecondStage.spin(fwd,6000,voltageUnits::mV);
   ThirdStage.stop(hold);
-  chassis.drive_distance(40);// Va adelante
+  chassis.drive_distance(48);// Va adelante
   FirstStage.spin(reverse,12000,voltageUnits::mV);
   SecondStage.spin(reverse,12000,voltageUnits::mV);
   ThirdStage.spin(reverse,12000,voltageUnits::mV);
@@ -198,11 +235,11 @@ void autonomousMain(void) {
   // When the field goes enabled for the second time this task will start again
   // and we will enter the interaction period. 
   // ..........................................................................
-  OpticalBottom.objectDetected(onBottomDetected);
-  OpticalTop.objectDetected(onTopDetected);
+  thread colorBottom = thread(onBottomDetectedThread);
+  colorBottom.setPriority(15);
   FirstStage.spin(forward, 100, percent);
   SecondStage.spin(forward,100,percent);
-  // ThirdStage.spin(forward, 100, percent);
+  ThirdStage.spin(forward, 100, percent);
   // thread colorSort = thread(ColorSortBottomParallel);
   // thread colorSortTop = thread(ColorSortTopParallel);
 
@@ -210,6 +247,10 @@ void autonomousMain(void) {
   // thread intakeSpin = thread(IntakeParallel);
   // FirstStage.spin(fwd,12000,voltageUnits::mV);
   // SecondStage.spin(fwd, 12000, voltageUnits::mV);
+  // FirstStage.spin(forward, 100, percent);
+  // SecondStage.spin(forward, 100, percent);
+  // OpticalBottom.objectDetected(onBottomDetected);
+
     // SecondStage.spin(fwd,12000,voltageUnits::mV);
   // if(firstAutoFlag)
   //   auto_Isolation();
@@ -219,13 +260,41 @@ void autonomousMain(void) {
   // firstAutoFlag = false;
 }
 
+bool mbool = false;
+// bool dbool = false;
 void usercontrol(void) {
+  thread colorBottom = thread(onBottomDetectedThread);
+  colorBottom.setPriority(15);
   // User control code here, inside the loop
   while (1) {
-    // This is the main execution loop for the user control program.
-    // Each time through the loop your program should update motor + servo
-    // values based on feedback from the joysticks.
+    if (Controller1.ButtonR1.pressing()) {
+      FirstStage.spin(forward, 100, percent);
+    } else if (Controller1.ButtonR2.pressing()) {
+      FirstStage.spin(reverse, 100, percent);
+    } else {
+      FirstStage.stop(hold);
+    }
+    if (Controller1.ButtonL1.pressing()) {
+      SecondStage.spin(forward, 100, percent);
+    } else if (Controller1.ButtonL2.pressing()) {
+      SecondStage.spin(reverse, 100, percent);
+    } else {
+      SecondStage.stop(hold);
+    }
+    if (Controller1.ButtonUp.pressing()) {
+      ThirdStage.spin(forward, 100, percent);
+    } else {
+      ThirdStage.stop(hold);
+    }
 
+    if (Controller1.ButtonA.pressing()) {
+      mbool = !mbool;
+      waitUntil(Controller1.ButtonA.pressing());
+    }
+    Matchloader.set(mbool);
+
+    // OpticalBottom.objectDetected(onBottomDetected);
+    // OpticalTop.objectDetected(onTopDetected);
     // ........................................................................
     // Insert user code here. This is where you use the joystick values to
     // update your motors, etc.

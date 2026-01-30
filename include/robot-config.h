@@ -6,7 +6,7 @@ enum OBJECT {
   BallUndefined
 };
 
-#define TEAMCOLOR BallBlue
+#define TEAMCOLOR BallRed
 
 extern brain Brain;
 
@@ -30,6 +30,7 @@ extern motor Left3;
 
 extern optical OpticalTop;
 extern optical OpticalBottom;
+extern optical OpticalBottom1;
 
 //Pistons
 extern digital_out Matchloader;
@@ -43,6 +44,8 @@ extern digital_out Expansion;
 extern inertial InertialSensor;
 
 
+extern directionType thirdStageDefaultDir;
+extern bool thirdStageOverrideActive;
 //Drivetrain Motors
 
 
