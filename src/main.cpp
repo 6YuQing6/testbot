@@ -118,6 +118,8 @@ PORT3,     -PORT4,
   Matchloader.set(false);
   // while (InertialSensor.isCalibrating()) {
   InertialSensor.calibrate();
+  OpticalBottom1.integrationTime(5);
+  OpticalBottom.integrationTime(5);
     // Brain.Screen.printAt(10, 10, "Calibrating");
   // }
   Brain.Screen.printAt(10,10, "Done Calibrating");
@@ -131,9 +133,9 @@ void auto_Isolation(void) {
   chassis.set_drive_exit_conditions(1.5, 300, 2000);
 
   // start with bot backwards, top left park zone black aligns with bottom right of bot
-  OpticalBottom.objectDetected(onBottomDetected);
+  // OpticalBottom.objectDetected(onBottomDetected);
   chassis.set_heading(0);
-  chassis.drive_distance(-37);
+  chassis.drive_distance(-36.5);
   chassis.turn_to_angle(45);
   // chassis.drive_distance(-5);
   // ThirdStage.spin(reverse, 50, percent);
@@ -167,10 +169,11 @@ void auto_Isolation(void) {
   chassis.turn_to_angle(0);
   chassis.set_drive_constants(10, 1.5, 0, 10, 0);
 
-  chassis.drive_distance(10);
-  chassis.drive_distance(-28);
+  chassis.drive_distance(14);
+  wait(1000, msec);
+  // chassis.drive_distance(-24);
   // loads long goal
-  OpticalTop.objectDetected(onTopDetected);
+  // OpticalTop.objectDetected(onTopDetected);
   FirstStage.spin(forward, 100, percent);
   SecondStage.spin(forward, 100, percent);
   ThirdStage.spin(forward, 100, percent);
@@ -228,6 +231,7 @@ void auto_Interaction(void) {
 
 bool firstAutoFlag = true;
 
+
 void autonomousMain(void) {
   // ..........................................................................
   // The first time we enter this function we will launch our Isolation routine
@@ -235,23 +239,21 @@ void autonomousMain(void) {
   // When the field goes enabled for the second time this task will start again
   // and we will enter the interaction period. 
   // ..........................................................................
-  thread colorBottom = thread(onBottomDetectedThread);
+  thread colorTop = thread(onTopDetectedThread);
+  thread colorBottom = thread(onBottomDetectedThread); // responsible for opening / closing piston
   colorBottom.setPriority(15);
-  FirstStage.spin(forward, 100, percent);
-  SecondStage.spin(forward,100,percent);
-  ThirdStage.spin(forward, 100, percent);
-  // thread colorSort = thread(ColorSortBottomParallel);
-  // thread colorSortTop = thread(ColorSortTopParallel);
+  colorTop.setPriority(14);
+  // responsible for intaking balls correctly
+  while (true) {
+    if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
+      ZeroStage.stop(brake);
+      wait(0.5, sec);
+    } else {
+      ZeroStage.spin(forward, 100, percent);
+    }
+    FirstStage.spin(forward, 100, percent);
+  }
 
-  // might cause race condition
-  // thread intakeSpin = thread(IntakeParallel);
-  // FirstStage.spin(fwd,12000,voltageUnits::mV);
-  // SecondStage.spin(fwd, 12000, voltageUnits::mV);
-  // FirstStage.spin(forward, 100, percent);
-  // SecondStage.spin(forward, 100, percent);
-  // OpticalBottom.objectDetected(onBottomDetected);
-
-    // SecondStage.spin(fwd,12000,voltageUnits::mV);
   // if(firstAutoFlag)
   //   auto_Isolation();
   // else 
@@ -263,28 +265,34 @@ void autonomousMain(void) {
 bool mbool = false;
 // bool dbool = false;
 void usercontrol(void) {
+  thread colorTop = thread(onTopDetectedThread);
   thread colorBottom = thread(onBottomDetectedThread);
   colorBottom.setPriority(15);
+  colorTop.setPriority(14);
   // User control code here, inside the loop
   while (1) {
     if (Controller1.ButtonR1.pressing()) {
-      FirstStage.spin(forward, 100, percent);
+      FirstStage.spin(forward);
     } else if (Controller1.ButtonR2.pressing()) {
-      FirstStage.spin(reverse, 100, percent);
+      FirstStage.spin(reverse);
     } else {
       FirstStage.stop(hold);
     }
     if (Controller1.ButtonL1.pressing()) {
-      SecondStage.spin(forward, 100, percent);
+      SecondStage.spin(forward);
     } else if (Controller1.ButtonL2.pressing()) {
-      SecondStage.spin(reverse, 100, percent);
+      SecondStage.spin(reverse);
     } else {
       SecondStage.stop(hold);
     }
-    if (Controller1.ButtonUp.pressing()) {
-      ThirdStage.spin(forward, 100, percent);
-    } else {
-      ThirdStage.stop(hold);
+    if (!thirdStageOverrideActive) {
+      if (Controller1.ButtonUp.pressing()) {
+        ThirdStage.spin(forward, 100, percent);
+      } else if (Controller1.ButtonDown.pressing()) {
+        ThirdStage.spin(reverse, 100, percent);
+      } else if (Controller1.ButtonLeft.pressing()) {
+        ThirdStage.stop(hold);
+      }
     }
 
     if (Controller1.ButtonA.pressing()) {

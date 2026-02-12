@@ -11,7 +11,7 @@ int detectBallFromHue(int hue) {
   if ((hue >= 300 && hue <= 359) || (hue >= 0 && hue <= 50)) {
     return BallRed;
   }
-  if (hue >= 160 && hue <= 250) {
+  if (hue >= 140 && hue <= 278) {
     return BallBlue;
   }
   return BallUndefined;
@@ -19,9 +19,9 @@ int detectBallFromHue(int hue) {
 
 void onCountBall() {
   if (counter.countBall()) {
-    Brain.Screen.printAt(10, 50, "Ball added! Count: %d", counter.balls());
+    Brain.Screen.printAt(10, 160, "Ball added! Count: %d", counter.balls());
   } else {
-    Brain.Screen.printAt(10, 50, "Count full (%d)", counter.balls());
+    Brain.Screen.printAt(10, 160, "Count full (%d)", counter.balls());
   }
 }
 
@@ -40,66 +40,76 @@ int onBottomDetectedThread() {
   OpticalBottom1.setLightPower(100, percent);
   OpticalBottom.setLight(ledState::on);
   OpticalBottom1.setLight(ledState::on);
-
   // OpticalBottom.objectDetectThreshold(255);
   // OpticalBottom1.objectDetectThreshold(255);
   OpticalBottom1.objectLost(onCountBall);
 
-  while (true) {
-    if (OpticalBottom.isNearObject() || OpticalBottom1.isNearObject()) {
-      int hue0 = OpticalBottom.hue();
-      int hue1 = OpticalBottom1.hue();
-      int avgHue = (hue0 + hue1) / 2;
-      Brain.Screen.printAt(10, 20, "Hue1: %d, Hue2: %d", hue0, hue1);
-      Brain.Screen.printAt(10, 30, "Average Hue: %d", avgHue);
+  while (true) { 
+      if (OpticalBottom.isNearObject() || OpticalBottom1.isNearObject()) {
+        int hue0 = OpticalBottom.hue();
+        int hue1 = OpticalBottom1.hue();
+        int avgHue = (hue0 + hue1) / 2;
+        Brain.Screen.printAt(10, 20, "Hue1: %d, Hue2: %d", hue0, hue1);
+        Brain.Screen.printAt(10, 40, "Average Hue: %d", avgHue);
 
-      int detected = BallUndefined;
+        int detected = BallUndefined;
 
-      // Classify independently
-      int d0 = OpticalBottom.isNearObject() ? detectBallFromHue(hue0) : BallUndefined;
-      int d1 = OpticalBottom1.isNearObject() ? detectBallFromHue(hue1) : BallUndefined;
+        // Classify independently
+        int d0 = OpticalBottom.isNearObject() ? detectBallFromHue(hue0) : BallUndefined;
+        int d1 = OpticalBottom1.isNearObject() ? detectBallFromHue(hue1) : BallUndefined;
 
-      if (d0 == d1) {
-        detected = d0;
-      } else if (d0 != BallUndefined) {
-        detected = d0;
-      } else if (d1 != BallUndefined) {
-        detected = d1;
-      } else {
-        detected = detectBallFromHue(avgHue);
-      }
-      Brain.Screen.printAt(10, 40, "Detected Color: %d", detected);
-      
-      // Wrong color → eject
-      if (detected != TEAMCOLOR) {
-        colorState = COLOR_EJECTING;
-      }
-    }    
+        if (d0 == d1) {
+          detected = d0;
+        } else if (d0 == BallBlue || d1 == BallBlue) {
+          // favors ball blue since default color is red
+          detected = BallBlue;
+        } else if (d0 != BallUndefined) {
+          detected = d0;
+        } else if (d1 != BallUndefined) {
+          detected = d1;
+        } else {
+          detected = detectBallFromHue(avgHue);
+        }
+        Brain.Screen.printAt(10, 60, "Detected Color: %d", detected);
+        
+        // Wrong color → eject
+        if (detected != TEAMCOLOR) {
+          colorState = COLOR_EJECTING;
+        } else {
+          colorState = COLOR_IDLE;
+        }
+      } 
     switch (colorState) {
 
       case COLOR_IDLE: {
-        Brain.Screen.printAt(10, 70, "State: Color Idle");
+        Brain.Screen.printAt(10, 80, "State: Color Idle");
+        colorTimer = ColorSortTimer.time();
+        ColorSort.set(false);
         break;
       }
 
       // ───────────────────────────────
       case COLOR_EJECTING: {
-          Brain.Screen.printAt(10, 70, "State: Color Eject");
-          ColorSort.set(true);
-          counter.removeBall();
-          colorTimer = ColorSortTimer.time();
-          colorState = COLOR_RESET;
+          Brain.Screen.printAt(10, 80, "State: Color Eject");
+          int currentTime = ColorSortTimer.time();
+          if (currentTime > colorTimer + 500) {
+            Brain.Screen.printAt(10, 80, "Opening Color Sort");
+            ColorSort.set(true);
+            counter.removeBall();
+            colorTimer = ColorSortTimer.time();
+            colorState = COLOR_RESET;
+          }
           break;
       }
 
       // ───────────────────────────────
       case COLOR_RESET: {
-        Brain.Screen.printAt(10, 70, "State: Color Reset");
+        Brain.Screen.printAt(10, 80, "State: Color Reset");
 
         int currentTime = ColorSortTimer.time();
         // after 200 msec set false
-        if (currentTime > colorTimer + 500) {
-          Brain.Screen.printAt(10, 90, "Closing Color Sort");
+        if (currentTime > colorTimer + 100) {
+          Brain.Screen.printAt(10, 80, "Closing Color Sort");
           ColorSort.set(false);
           colorTimer = 0;
           colorState = COLOR_IDLE;
@@ -109,12 +119,78 @@ int onBottomDetectedThread() {
     }
 
     // Let auton & other tasks run
-    this_thread::sleep_for(20);
+    this_thread::sleep_for(15);
   }
 
   return 0;
 }
 
+int topState = 0;
+int topColorTimer = 0;
+
+int onTopDetectedThread() {
+  // Setup once
+  OpticalTop.setLightPower(100, percent);
+  OpticalTop.setLight(ledState::on);
+
+  while (true) {
+    switch (topState) {
+
+      // ───────────────────────────────
+      case COLOR_IDLE: {
+        thirdStageOverrideActive = false;
+        Brain.Screen.printAt(10, 110, "Top State: IDLE");
+
+        if (OpticalTop.isNearObject()) {
+          int hue = OpticalTop.hue();
+          int detected = detectBallFromHue(hue);
+
+          Brain.Screen.printAt(
+            10, 130,
+            "Top Hue: %d Color: %d",
+            hue, detected
+          );
+
+          // Wrong color → eject
+          if (detected != TEAMCOLOR) {
+            topState = COLOR_EJECTING;
+
+          }
+        }
+        break;
+      }
+
+      // ───────────────────────────────
+      case COLOR_EJECTING: {
+        Brain.Screen.printAt(10, 110, "Top State: EJECT");
+        thirdStageOverrideActive = true;
+        // Reverse third stage briefly
+        ThirdStage.spin(reverse, 12000, voltageUnits::mV);
+        colorTimer = ColorSortTimer.time();
+        counter.removeBall();
+        topState = COLOR_RESET;
+        break;
+      }
+
+      // ───────────────────────────────
+      case COLOR_RESET: {
+        Brain.Screen.printAt(10, 110, "Top State: RESET");
+        int currentTime = ColorSortTimer.time();
+        if (currentTime > colorTimer + 500) {
+          // Resume normal direction
+          ThirdStage.spin(thirdStageDefaultDir, 12000, voltageUnits::mV);
+          topState = COLOR_IDLE;
+        }
+        break;
+      }
+    }
+
+    // Let other threads breathe
+    this_thread::sleep_for(20);
+  }
+
+  return 0;
+}
 
 // called when bottom optical *detects* a new object
 void onBottomDetected() {

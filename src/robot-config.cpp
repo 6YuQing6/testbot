@@ -25,6 +25,7 @@ motor Left3 = motor(PORT14, ratio6_1, true);
 motor FirstStage = motor(PORT8, ratio6_1, false); // forward intake
 motor SecondStage = motor(PORT11, ratio6_1, false); // forward outake / up
 motor ThirdStage = motor(PORT12, ratio6_1, false); // forward outake / up
+motor ZeroStage = motor(PORT2, ratio18_1, false); // forward up
 
 //Pneumatics
 digital_out Matchloader = digital_out(Brain.ThreeWirePort.A);

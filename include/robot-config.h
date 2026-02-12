@@ -15,6 +15,7 @@ extern controller Controller1;
 
 //Motors
 extern motor FirstStage;
+extern motor ZeroStage;
 extern motor SecondStage;
 extern motor ThirdStage;
 
