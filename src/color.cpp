@@ -92,7 +92,7 @@ int onBottomDetectedThread() {
       case COLOR_EJECTING: {
           Brain.Screen.printAt(10, 80, "State: Color Eject");
           int currentTime = ColorSortTimer.time();
-          if (currentTime > colorTimer + 500) {
+          if (currentTime > colorTimer + 300) {
             Brain.Screen.printAt(10, 80, "Opening Color Sort");
             ColorSort.set(true);
             counter.removeBall();

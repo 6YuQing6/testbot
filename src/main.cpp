@@ -111,6 +111,7 @@ PORT3,     -PORT4,
   OpticalTop.setLightPower(100, percent);
   OpticalBottom.setLight(ledState::on);
   OpticalTop.setLight(ledState::on);
+  ZeroStage.setVelocity(100, percent);
   SecondStage.setVelocity(100, percent);
   ThirdStage.setVelocity(100, percent);
   FirstStage.setVelocity(100, percent);
@@ -247,7 +248,6 @@ void autonomousMain(void) {
   while (true) {
     if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
       ZeroStage.stop(brake);
-      wait(0.5, sec);
     } else {
       ZeroStage.spin(forward, 100, percent);
     }
@@ -272,18 +272,19 @@ void usercontrol(void) {
   // User control code here, inside the loop
   while (1) {
     if (Controller1.ButtonR1.pressing()) {
+      ZeroStage.spin(forward);
       FirstStage.spin(forward);
+      if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
+        SecondStage.stop(brake);
+      } else {
+        SecondStage.spin(forward);
+      }
     } else if (Controller1.ButtonR2.pressing()) {
+      ZeroStage.spin(reverse);
       FirstStage.spin(reverse);
-    } else {
-      FirstStage.stop(hold);
-    }
-    if (Controller1.ButtonL1.pressing()) {
-      SecondStage.spin(forward);
-    } else if (Controller1.ButtonL2.pressing()) {
       SecondStage.spin(reverse);
     } else {
-      SecondStage.stop(hold);
+      FirstStage.stop(hold);
     }
     if (!thirdStageOverrideActive) {
       if (Controller1.ButtonUp.pressing()) {
