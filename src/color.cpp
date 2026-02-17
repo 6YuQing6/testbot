@@ -43,13 +43,16 @@ int onBottomDetectedThread() {
   // OpticalBottom.objectDetectThreshold(255);
   // OpticalBottom1.objectDetectThreshold(255);
   OpticalBottom1.objectLost(onCountBall);
+  ColorSortTimer.reset();
 
   while (true) { 
       if (OpticalBottom.isNearObject() || OpticalBottom1.isNearObject()) {
         int hue0 = OpticalBottom.hue();
         int hue1 = OpticalBottom1.hue();
         int avgHue = (hue0 + hue1) / 2;
-        Brain.Screen.printAt(10, 20, "Hue1: %d, Hue2: %d", hue0, hue1);
+        Brain.Screen.clearScreen();
+        Brain.Screen.printAt(10, 20, "Hue1: %d", hue0);
+        Brain.Screen.printAt(10, 20, "Hue2: %d", hue1);
         Brain.Screen.printAt(10, 40, "Average Hue: %d", avgHue);
 
         int detected = BallUndefined;
@@ -74,16 +77,15 @@ int onBottomDetectedThread() {
         
         // Wrong color → eject
         if (detected != TEAMCOLOR) {
+          // colorTimer = ColorSortTimer.time();
           colorState = COLOR_EJECTING;
         } else {
           colorState = COLOR_IDLE;
         }
       } 
     switch (colorState) {
-
       case COLOR_IDLE: {
         Brain.Screen.printAt(10, 80, "State: Color Idle");
-        colorTimer = ColorSortTimer.time();
         ColorSort.set(false);
         break;
       }
@@ -91,14 +93,14 @@ int onBottomDetectedThread() {
       // ───────────────────────────────
       case COLOR_EJECTING: {
           Brain.Screen.printAt(10, 80, "State: Color Eject");
-          int currentTime = ColorSortTimer.time();
-          if (currentTime > colorTimer + 300) {
-            Brain.Screen.printAt(10, 80, "Opening Color Sort");
-            ColorSort.set(true);
-            counter.removeBall();
-            colorTimer = ColorSortTimer.time();
-            colorState = COLOR_RESET;
-          }
+          // int currentTime = ColorSortTimer.time();
+          // Brain.Screen.printAt(10, 80, "Opening Color Sort: %d", currentTime);
+          // if (currentTime - colorTimer > 5000) {
+          ColorSort.set(true);
+          counter.removeBall();
+          colorTimer = ColorSortTimer.time();
+          colorState = COLOR_RESET;
+          // }
           break;
       }
 
@@ -107,8 +109,7 @@ int onBottomDetectedThread() {
         Brain.Screen.printAt(10, 80, "State: Color Reset");
 
         int currentTime = ColorSortTimer.time();
-        // after 200 msec set false
-        if (currentTime > colorTimer + 100) {
+        if (currentTime - colorTimer > 100) {
           Brain.Screen.printAt(10, 80, "Closing Color Sort");
           ColorSort.set(false);
           colorTimer = 0;
@@ -120,8 +121,7 @@ int onBottomDetectedThread() {
 
     // Let auton & other tasks run
     this_thread::sleep_for(15);
-  }
-
+  }       
   return 0;
 }
 
@@ -176,7 +176,7 @@ int onTopDetectedThread() {
       case COLOR_RESET: {
         Brain.Screen.printAt(10, 110, "Top State: RESET");
         int currentTime = ColorSortTimer.time();
-        if (currentTime > colorTimer + 500) {
+        if (currentTime > colorTimer + 600) {
           // Resume normal direction
           ThirdStage.spin(thirdStageDefaultDir, 12000, voltageUnits::mV);
           topState = COLOR_IDLE;

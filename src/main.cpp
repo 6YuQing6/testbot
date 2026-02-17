@@ -245,13 +245,15 @@ void autonomousMain(void) {
   colorBottom.setPriority(15);
   colorTop.setPriority(14);
   // responsible for intaking balls correctly
+  FirstStage.spin(forward, 100, percent);
+  SecondStage.spin(forward, 100, percent);
+  ThirdStage.spin(forward, 100, percent);
   while (true) {
     if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
-      ZeroStage.stop(brake);
+      ZeroStage.spin(forward, 10, percent);
     } else {
       ZeroStage.spin(forward, 100, percent);
     }
-    FirstStage.spin(forward, 100, percent);
   }
 
   // if(firstAutoFlag)
@@ -263,12 +265,13 @@ void autonomousMain(void) {
 }
 
 bool mbool = false;
+bool cbool = false;
 // bool dbool = false;
 void usercontrol(void) {
-  thread colorTop = thread(onTopDetectedThread);
-  thread colorBottom = thread(onBottomDetectedThread);
-  colorBottom.setPriority(15);
-  colorTop.setPriority(14);
+  // thread colorTop = thread(onTopDetectedThread);
+  // thread colorBottom = thread(onBottomDetectedThread);
+  // colorBottom.setPriority(15);
+  // colorTop.setPriority(14);
   // User control code here, inside the loop
   while (1) {
     if (Controller1.ButtonR1.pressing()) {
@@ -298,9 +301,15 @@ void usercontrol(void) {
 
     if (Controller1.ButtonA.pressing()) {
       mbool = !mbool;
-      waitUntil(Controller1.ButtonA.pressing());
+      waitUntil(!Controller1.ButtonA.pressing());
     }
     Matchloader.set(mbool);
+
+    if (Controller1.ButtonB.pressing()) {
+      cbool = !cbool;
+      waitUntil(!Controller1.ButtonB.pressing());
+    }
+    ColorSort.set(cbool);
 
     // OpticalBottom.objectDetected(onBottomDetected);
     // OpticalTop.objectDetected(onTopDetected);
