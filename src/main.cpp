@@ -228,11 +228,21 @@ void auto_Interaction(void) {
 /*                                                                           */
 /*---------------------------------------------------------------------------*/
 
-
+void intakeBalls() {
+    // responsible for intaking balls correctly
+  FirstStage.spin(forward, 100, percent);
+  SecondStage.spin(forward, 100, percent);
+  ThirdStage.spin(thirdStageDefaultDir, 100, percent);
+  while (true) {
+    if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
+      ZeroStage.spin(forward, 10, percent);
+    } else {
+      ZeroStage.spin(forward, 100, percent);
+    }
+  }
+}
 
 bool firstAutoFlag = true;
-
-
 void autonomousMain(void) {
   // ..........................................................................
   // The first time we enter this function we will launch our Isolation routine
@@ -244,24 +254,8 @@ void autonomousMain(void) {
   thread colorBottom = thread(onBottomDetectedThread); // responsible for opening / closing piston
   colorBottom.setPriority(15);
   colorTop.setPriority(14);
-  // responsible for intaking balls correctly
-  FirstStage.spin(forward, 100, percent);
-  SecondStage.spin(forward, 100, percent);
-  ThirdStage.spin(forward, 100, percent);
-  while (true) {
-    if (OpticalBottom1.isNearObject() || OpticalBottom.isNearObject()) {
-      ZeroStage.spin(forward, 10, percent);
-    } else {
-      ZeroStage.spin(forward, 100, percent);
-    }
-  }
 
-  // if(firstAutoFlag)
-  //   auto_Isolation();
-  // else 
-  //   auto_Interaction();
 
-  // firstAutoFlag = false;
 }
 
 bool mbool = false;

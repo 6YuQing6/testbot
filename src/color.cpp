@@ -77,7 +77,6 @@ int onBottomDetectedThread() {
         
         // Wrong color → eject
         if (detected != TEAMCOLOR) {
-          // colorTimer = ColorSortTimer.time();
           colorState = COLOR_EJECTING;
         } else {
           colorState = COLOR_IDLE;
@@ -184,8 +183,6 @@ int onTopDetectedThread() {
         break;
       }
     }
-
-    // Let other threads breathe
     this_thread::sleep_for(20);
   }
 

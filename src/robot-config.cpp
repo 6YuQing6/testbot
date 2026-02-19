@@ -40,9 +40,10 @@ optical OpticalBottom1 = optical(PORT6);
 // // AI 
 // gps GPSLeft = gps(PORT9, 0, -165, distanceUnits::mm, 180);
 // gps GPSRight = gps(PORT12, 0, 165, distanceUnits::mm, 180);
+serial_link seriallink = serial_link(PORT1, "Link", linkType::manager);
+
 
 inertial InertialSensor = inertial(PORT17);
-
 
 
 directionType thirdStageDefaultDir = forward;
