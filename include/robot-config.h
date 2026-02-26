@@ -14,10 +14,10 @@ extern brain Brain;
 extern controller Controller1;
 
 //Motors
-extern motor FirstStage;
-extern motor ZeroStage;
-extern motor SecondStage;
-extern motor ThirdStage;
+// extern motor FirstStage;
+// extern motor ZeroStage;
+// extern motor SecondStage;
+// extern motor ThirdStage;
 
 extern motor Right1;
 extern motor Right2;
@@ -29,9 +29,9 @@ extern motor Left3;
 
 //Sensors
 
-extern optical OpticalTop;
-extern optical OpticalBottom;
-extern optical OpticalBottom1;
+// extern optical OpticalTop;
+// extern optical OpticalBottom;
+// extern optical OpticalBottom1;
 
 //Pistons
 extern digital_out Matchloader;
@@ -41,8 +41,10 @@ extern digital_out Expansion;
 // // AI
 // extern gps GPSLeft;
 // extern gps GPSRight;
+// extern serial_link serialManager;
+// extern serial_link serialWorker;
 
-extern inertial InertialSensor;
+// extern inertial InertialSensor;
 
 
 extern directionType thirdStageDefaultDir;
