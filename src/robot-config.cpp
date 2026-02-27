@@ -41,7 +41,7 @@ digital_out Expansion = digital_out(Brain.ThreeWirePort.C);
 // gps GPSLeft = gps(PORT9, 0, -165, distanceUnits::mm, 180);
 // gps GPSRight = gps(PORT12, 0, 165, distanceUnits::mm, 180);
 // serial_link serialManager = serial_link(PORT7, "3134x1_manager", linkType::manager);
-// serial_link serialWorker = serial_link(PORT1, "3134x1_worker", linkType::worker);
+serial_link serialWorker = serial_link(PORT10, "3134x1", linkType::worker);
 
 
 // inertial InertialSensor = inertial(PORT17);

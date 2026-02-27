@@ -242,64 +242,64 @@ void intakeBalls() {
   // }
 }
 
-distance DistanceTopLeft = distance(PORT15);
-distance DistanceTopRight = distance(PORT4);
-distance DistanceBottomLeft = distance(PORT13);
-distance DistanceBottomRight = distance(PORT9);
+// distance DistanceTopLeft = distance(PORT15);
+// distance DistanceTopRight = distance(PORT4);
+// distance DistanceBottomLeft = distance(PORT13);
+// distance DistanceBottomRight = distance(PORT9);
 
-distance* distanceArr[4] = {
-  &DistanceTopLeft,
-  &DistanceTopRight,
-  &DistanceBottomLeft,
-  &DistanceBottomRight
-};
-void distanceTest() {
-  float distanceThreshold = 8.0;
-  while (true) {
-    // Clear the screen and set the cursor to the top left corner on each loop
-    Brain.Screen.setCursor(1, 1);
+// distance* distanceArr[4] = {
+//   &DistanceTopLeft,
+//   &DistanceTopRight,
+//   &DistanceBottomLeft,
+//   &DistanceBottomRight
+// };
+// void distanceTest() {
+//   float distanceThreshold = 8.0;
+//   while (true) {
+//     // Clear the screen and set the cursor to the top left corner on each loop
+//     Brain.Screen.setCursor(1, 1);
 
 
-    bool bottomNear =
-      DistanceBottomLeft.isObjectDetected() &&
-      DistanceBottomRight.isObjectDetected() &&
-      DistanceBottomLeft.objectDistance(inches) < distanceThreshold &&
-      DistanceBottomRight.objectDistance(inches) < distanceThreshold;
+//     bool bottomNear =
+//       DistanceBottomLeft.isObjectDetected() &&
+//       DistanceBottomRight.isObjectDetected() &&
+//       DistanceBottomLeft.objectDistance(inches) < distanceThreshold &&
+//       DistanceBottomRight.objectDistance(inches) < distanceThreshold;
 
-    bool topNear =
-      (DistanceTopLeft.isObjectDetected() &&
-       DistanceTopLeft.objectDistance(inches) < distanceThreshold) ||
-      (DistanceTopRight.isObjectDetected() &&
-       DistanceTopRight.objectDistance(inches) < distanceThreshold);
+//     bool topNear =
+//       (DistanceTopLeft.isObjectDetected() &&
+//        DistanceTopLeft.objectDistance(inches) < distanceThreshold) ||
+//       (DistanceTopRight.isObjectDetected() &&
+//        DistanceTopRight.objectDistance(inches) < distanceThreshold);
 
-    if (bottomNear && topNear) {
-      printf("near wall");
-      Brain.Screen.print("Near Wall");
-      Brain.Screen.newLine();
-      chassis.drive_stop(hold);
-      chassis.set_heading(0);
-      chassis.drive_distance(-10);
-      chassis.turn_to_angle(180);
-      // callback here
-    } else {
-      chassis.drive_with_voltage(4,4);
-    }
+//     if (bottomNear && topNear) {
+//       printf("near wall");
+//       Brain.Screen.print("Near Wall");
+//       Brain.Screen.newLine();
+//       chassis.drive_stop(hold);
+//       chassis.set_heading(0);
+//       chassis.drive_distance(-10);
+//       chassis.turn_to_angle(180);
+//       // callback here
+//     } else {
+//       chassis.drive_with_voltage(4,4);
+//     }
 
-    for (int i = 0; i < 4; i ++) {
-      distance* Dist = distanceArr[i];
+//     for (int i = 0; i < 4; i ++) {
+//       distance* Dist = distanceArr[i];
           
-      Brain.Screen.print("%d Found Object?: ", i);
-      Brain.Screen.print("%s", Dist->isObjectDetected() ? "TRUE" : "FALSE");
-      Brain.Screen.newLine();
+//       Brain.Screen.print("%d Found Object?: ", i);
+//       Brain.Screen.print("%s", Dist->isObjectDetected() ? "TRUE" : "FALSE");
+//       Brain.Screen.newLine();
 
-      Brain.Screen.newLine();
-      Brain.Screen.print("Distance in Inches: ");
-      Brain.Screen.print("%.2f", Dist->objectDistance(inches));
-    }
-    // A brief delay to allow text to be printed without distortion or tearing
-    wait(0.2, seconds);
-  }  
-}
+//       Brain.Screen.newLine();
+//       Brain.Screen.print("Distance in Inches: ");
+//       Brain.Screen.print("%.2f", Dist->objectDistance(inches));
+//     }
+//     // A brief delay to allow text to be printed without distortion or tearing
+//     wait(0.2, seconds);
+//   }  
+// }
 
 
 
@@ -316,7 +316,7 @@ void autonomousMain(void) {
   // colorBottom.setPriority(15);
   // colorTop.setPriority(14);
   
-  distanceTest();
+  // distanceTest();
 
 }
 
@@ -415,25 +415,98 @@ void pid_tuning_mode(void) {
 //   }
 // }
 
-// // callbacks only print to terminal
-// void receive_message( uint8_t *buffer, int32_t length ) {
-//   printf("receive_message: %ld bytes were recieved\n", length );
-//   for(int i=0;i<length;i++) {
-//     printf("%02X ", buffer[i] );
-//     printf("\n");
-//   }
-// }
+#define MAX_BALLS 10
 
-// void serialWorkerAutonTest() {
-//   // register callback
-//   serialWorker.received( receive_message );
-//   // show link status
-//   while(1) {
-//     Brain.Screen.printAt( 10, 50, true, "Link: %s", serialWorker.isLinked() ? "ok" : "--" );
-//     // Allow other tasks to run
-//     this_thread::sleep_for(50);
-//   }
-// }
+struct BallPosition {
+    float x;
+    float y;
+};
+
+struct RobotVisionData {
+    float robotX;
+    float robotY;
+    float robotZ;
+
+    uint8_t ballCount;  // how many are valid (0–MAX_BALLS)
+
+    BallPosition balls[MAX_BALLS];
+};
+
+// callbacks only print to terminal
+void receive_message( uint8_t *buffer, int32_t length ) {
+  printf("receive_message: %ld bytes were recieved\n", length );
+  // for(int i=0;i<length;i++) {
+  //   printf("%02X ", buffer[i] );
+  //   printf("\n");
+  // }
+    printf("Packet received. Length: %ld\n", length);
+
+    if(length == sizeof(RobotVisionData)) {
+
+        RobotVisionData received;
+        memcpy(&received, buffer, sizeof(received));
+
+        printf("Robot Position: X=%.2f Y=%.2f Z=%.2f\n",
+               received.robotX,
+               received.robotY,
+               received.robotZ);
+
+        printf("Ball Count: %d\n", received.ballCount);
+
+        for(int i = 0; i < received.ballCount; i++) {
+            printf("Ball %d -> X=%.2f Y=%.2f\n",
+                   i,
+                   received.balls[i].x,
+                   received.balls[i].y);
+        }
+
+        printf("-----------------------------\n");
+
+        // Still print to Brain screen if you want
+        Brain.Screen.clearScreen();
+
+        Brain.Screen.printAt(10,20,
+            "Robot: %.1f %.1f %.1f",
+            received.robotX,
+            received.robotY,
+            received.robotZ
+        );
+
+        Brain.Screen.printAt(10,40,
+            "Balls: %d",
+            received.ballCount
+        );
+
+        for(int i = 0; i < received.ballCount; i++) {
+            Brain.Screen.printAt(10, 60 + i*20,
+                "Ball %d: %.1f %.1f",
+                i,
+                received.balls[i].x,
+                received.balls[i].y
+            );
+        }
+
+    } else {
+        printf("ERROR: Size mismatch! Expected %u bytes\n",
+               (unsigned)sizeof(RobotVisionData));
+    }
+}
+
+void serialWorkerAutonTest() {
+  // register callback
+  serialWorker.received( receive_message );
+  // show link status
+  printf("Worker started\n");
+  printf("Linked: %d\n", serialWorker.isLinked());
+  while(1) {
+    Brain.Screen.printAt( 10, 30, true, "Link installed: %s", serialWorker.installed() ? "ok" : "--" );
+    Brain.Screen.printAt( 10, 50, true, "Link: %s", serialWorker.isLinked() ? "ok" : "--" );
+    // vex_printf("Link: %s\n", serialWorker.isLinked() ? "ok" : "--" );
+
+    // Allow other tasks to run
+    this_thread::sleep_for(50);
+  }
+}
 
 
 
@@ -448,13 +521,12 @@ int main() {
   // printf("Distance Test");
   // distanceTest();
 
-  // printf("Running program");
-  // if (isManager) serialManagerAutonTest();
-  // else serialWorkerAutonTest();
+  printf("Running program\n");
+  serialWorkerAutonTest();
 
   // Set up callbacks for autonomous and driver control periods.
   // Competition.autonomous(autonomousMain);
-  distanceTest();
+  // distanceTest();
   // Competition.autonomous(autonomousMain);
   // Competition.drivercontrol(usercontrol);
 

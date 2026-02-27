@@ -42,7 +42,7 @@ extern digital_out Expansion;
 // extern gps GPSLeft;
 // extern gps GPSRight;
 // extern serial_link serialManager;
-// extern serial_link serialWorker;
+extern serial_link serialWorker;
 
 // extern inertial InertialSensor;
 
